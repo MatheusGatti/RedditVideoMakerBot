@@ -14,6 +14,8 @@ from utils.voice import sanitize_text
 from utils.posttextparser import posttextparser
 from utils.ai_methods import sort_by_similarity
 
+import json
+
 
 def get_subreddit_threads(POST_ID: str):
     """
@@ -95,7 +97,8 @@ def get_subreddit_threads(POST_ID: str):
         keywords = [keyword.strip() for keyword in keywords]
         # Reformat the keywords for printing
         keywords_print = ", ".join(keywords)
-        print(f"Sorting threads by similarity to the given keywords: {keywords_print}")
+        print(
+            f"Sorting threads by similarity to the given keywords: {keywords_print}")
         threads, similarity_scores = sort_by_similarity(threads, keywords)
         submission, similarity_score = get_subreddit_undone(
             threads, subreddit, similarity_scores=similarity_scores
@@ -108,8 +111,9 @@ def get_subreddit_threads(POST_ID: str):
         return get_subreddit_threads(POST_ID)  # submission already done. rerun
 
     if settings.config["settings"]["storymode"]:
-        if not submission.selftext:
-            print_substep("You are trying to use story mode on post with no post text")
+        if not submission.selftext and settings.config["settings"]["storymodemethod"] != 2:
+            print_substep(
+                "You are trying to use story mode on post with no post text")
             exit()
         else:
             # Check for the length of the post text
@@ -119,6 +123,25 @@ def get_subreddit_threads(POST_ID: str):
                 print_substep(
                     f"Post is too long ({len(submission.selftext)}), try with a different post. ({settings.config['settings']['storymode_max_length']} character limit)"
                 )
+                print_substep(
+                    f"Post adicionado no arquivo videos.json para ser ignorado na próxima vez."
+                )
+                data = [
+                    {
+                        "subreddit": settings.config["reddit"]["thread"]["subreddit"],
+                        "id": submission.id,
+                        "time": "1683078060",
+                        "background_credit": "bbswitzer",
+                        "reddit_title": "Maximo de caracter",
+                        "filename": "Maximo de caracter"
+                    }
+                ]
+                with open('video_creation/data/videos.json', 'r') as f:
+                    videos = json.load(f)
+                    videos += data
+
+                with open('video_creation/data/videos.json', 'w') as f:
+                    json.dump(videos, f, indent=4)
                 exit()
     elif not submission.num_comments:
         print_substep("No comments found. Skipping.")
@@ -131,7 +154,8 @@ def get_subreddit_threads(POST_ID: str):
     num_comments = submission.num_comments
     threadurl = f"https://reddit.com{submission.permalink}"
 
-    print_substep(f"Video will be: {submission.title} :thumbsup:", style="bold green")
+    print_substep(
+        f"Video will be: {submission.title} :thumbsup:", style="bold green")
     print_substep(f"Thread url is: {threadurl} :thumbsup:", style="bold green")
     print_substep(f"Thread has {upvotes} upvotes", style="bold blue")
     print_substep(f"Thread has a upvote ratio of {ratio}%", style="bold blue")
@@ -150,6 +174,47 @@ def get_subreddit_threads(POST_ID: str):
     if settings.config["settings"]["storymode"]:
         if settings.config["settings"]["storymodemethod"] == 1:
             content["thread_post"] = posttextparser(submission.selftext)
+        #
+        #
+        #
+        # EU MODIFIQUEI
+        #
+        #
+        elif settings.config["settings"]["storymodemethod"] == 2:
+            content["thread_post"] = posttextparser(submission.selftext)
+            for top_level_comment in submission.comments:
+                if isinstance(top_level_comment, MoreComments):
+                    continue
+
+                if top_level_comment.body in ["[removed]", "[deleted]"]:
+                    continue  # # see https://github.com/JasonLovesDoggo/RedditVideoMakerBot/issues/78
+                if not top_level_comment.stickied:
+                    sanitised = sanitize_text(top_level_comment.body)
+                    if not sanitised or sanitised == " ":
+                        continue
+                    if len(top_level_comment.body) <= int(
+                        settings.config["reddit"]["thread"]["max_comment_length"]
+                    ):
+                        if len(top_level_comment.body) >= int(
+                            settings.config["reddit"]["thread"]["min_comment_length"]
+                        ):
+                            if (
+                                top_level_comment.author is not None
+                                and sanitize_text(top_level_comment.body) is not None
+                            ):  # if errors occur with this change to if not.
+                                content["comments"].append(
+                                    {
+                                        "comment_body": top_level_comment.body,
+                                        "comment_url": top_level_comment.permalink,
+                                        "comment_id": top_level_comment.id,
+                                    }
+                                )
+        #
+        #
+        # FIM
+        #
+        #
+        #
         else:
             content["thread_post"] = submission.selftext
     else:
@@ -181,5 +246,6 @@ def get_subreddit_threads(POST_ID: str):
                                 }
                             )
 
-    print_substep("Received subreddit threads Successfully.", style="bold green")
+    print_substep("Received subreddit threads Successfully.",
+                  style="bold green")
     return content

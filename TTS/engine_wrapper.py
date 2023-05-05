@@ -17,6 +17,8 @@ from utils import settings
 from utils.console import print_step, print_substep
 from utils.voice import sanitize_text
 
+from math import ceil
+
 DEFAULT_MAX_LENGTH: int = 50  # video length variable
 
 
@@ -55,7 +57,8 @@ class TTSEngine:
         self,
     ):  # adds periods to the end of paragraphs (where people often forget to put them) so tts doesn't blend sentences
         for comment in self.reddit_object["comments"]:
-            comment["comment_body"] = comment["comment_body"].replace("\n", ". ")
+            comment["comment_body"] = comment["comment_body"].replace(
+                "\n", ". ")
             if comment["comment_body"][-1] != ".":
                 comment["comment_body"] += "."
 
@@ -64,21 +67,57 @@ class TTSEngine:
         print_step("Saving Text to MP3 files...")
 
         self.add_periods()
-        self.call_tts("title", process_text(self.reddit_object["thread_title"]))
+        self.call_tts("title", process_text(
+            self.reddit_object["thread_title"]))
         # processed_text = ##self.reddit_object["thread_post"] != ""
         idx = None
 
         if settings.config["settings"]["storymode"]:
             if settings.config["settings"]["storymodemethod"] == 0:
                 if len(self.reddit_object["thread_post"]) > self.tts_module.max_chars:
-                    self.split_post(self.reddit_object["thread_post"], "postaudio")
+                    self.split_post(
+                        self.reddit_object["thread_post"], "postaudio")
                 else:
                     self.call_tts(
-                        "postaudio", process_text(self.reddit_object["thread_post"])
+                        "postaudio", process_text(
+                            self.reddit_object["thread_post"])
                     )
             elif settings.config["settings"]["storymodemethod"] == 1:
                 for idx, text in track(enumerate(self.reddit_object["thread_post"])):
                     self.call_tts(f"postaudio-{idx}", process_text(text))
+
+            #
+            #
+            # EU MODIFIQUEI
+            #
+            #
+            #
+            elif settings.config["settings"]["storymodemethod"] == 2:
+                for idx, text in track(enumerate(self.reddit_object["thread_post"])):
+                    self.call_tts(f"postaudio-{idx}", process_text(text))
+
+                for idx, comment in track(
+                    enumerate(self.reddit_object["comments"]), "Saving..."
+                ):
+                    # ! Stop creating mp3 files if the length is greater than max length.
+                    if self.length > self.max_length and idx > 1:
+                        self.length -= self.last_clip_length
+                        idx -= 1
+                        break
+                    if (
+                        len(comment["comment_body"]
+                            ) > self.tts_module.max_chars
+                    ):  # Split the comment if it is too long
+                        # Split the comment
+                        self.split_post(comment["comment_body"], idx)
+                    else:  # If the comment is not too long, just call the tts engine
+                        self.call_tts(f"{idx}", process_text(
+                            comment["comment_body"]))
+            #
+            #
+            # FIM
+            #
+            #
 
         else:
             for idx, comment in track(
@@ -92,11 +131,15 @@ class TTSEngine:
                 if (
                     len(comment["comment_body"]) > self.tts_module.max_chars
                 ):  # Split the comment if it is too long
-                    self.split_post(comment["comment_body"], idx)  # Split the comment
+                    # Split the comment
+                    self.split_post(comment["comment_body"], idx)
                 else:  # If the comment is not too long, just call the tts engine
-                    self.call_tts(f"{idx}", process_text(comment["comment_body"]))
+                    self.call_tts(f"{idx}", process_text(
+                        comment["comment_body"]))
 
-        print_substep("Saved Text to MP3 files successfully.", style="bold green")
+        print_substep("Saved Text to MP3 files successfully.",
+                      style="bold green")
+
         return self.length, idx
 
     def split_post(self, text: str, idx):
@@ -122,7 +165,8 @@ class TTSEngine:
                 with open(f"{self.path}/list.txt", "w") as f:
                     for idz in range(0, len(split_text)):
                         f.write("file " + f"'{idx}-{idz}.part.mp3'" + "\n")
-                    split_files.append(str(f"{self.path}/{idx}-{idy}.part.mp3"))
+                    split_files.append(
+                        str(f"{self.path}/{idx}-{idy}.part.mp3"))
                     f.write("file " + f"'silence.mp3'" + "\n")
 
                 os.system(
@@ -148,8 +192,12 @@ class TTSEngine:
         #     self.length += sox.file_info.duration(f"{self.path}/{filename}.mp3")
         try:
             clip = AudioFileClip(f"{self.path}/{filename}.mp3")
+            # print(clip, f"{self.path}/{filename}.mp3", clip.duration)
             self.last_clip_length = clip.duration
-            self.length += clip.duration
+            if settings.config["settings"]["storymode"] and settings.config["settings"]["storymodemethod"] == 2:
+                self.length += ceil(clip.duration)
+            else:
+                self.length += clip.duration
             clip.close()
         except:
             self.length = 0

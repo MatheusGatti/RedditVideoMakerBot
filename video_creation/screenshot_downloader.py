@@ -30,6 +30,9 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int):
     lang: Final[str] = settings.config["reddit"]["thread"]["post_lang"]
     storymode: Final[bool] = settings.config["settings"]["storymode"]
 
+    if storymode and settings.config["settings"]["storymodemethod"] == 2:
+        screenshot_num += 1
+
     print_step("Downloading screenshots of reddit posts...")
     reddit_id = re.sub(r"[^\w\s-]", "", reddit_object["thread_id"])
     # ! Make sure the reddit screenshots folder exists
@@ -71,6 +74,16 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int):
         # for idx,item in enumerate(reddit_object["thread_post"]):
         print_substep("Generating images...")
         return imagemaker(
+            theme=bgcolor,
+            reddit_obj=reddit_object,
+            txtclr=txtcolor,
+            transparent=transparent,
+        )
+
+    if storymode and settings.config["settings"]["storymodemethod"] == 2:
+        # for idx,item in enumerate(reddit_object["thread_post"]):
+        print_substep("Generating images...")
+        imagemaker(
             theme=bgcolor,
             reddit_obj=reddit_object,
             txtclr=txtcolor,
@@ -182,7 +195,7 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int):
 
             raise e
 
-        if storymode:
+        if storymode and settings.config["settings"]["storymodemethod"] == 0:
             page.locator('[data-click-id="text"]').first.screenshot(
                 path=f"assets/temp/{reddit_id}/png/story_content.png"
             )
@@ -200,7 +213,8 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int):
                 if page.locator('[data-testid="content-gate"]').is_visible():
                     page.locator('[data-testid="content-gate"] button').click()
 
-                page.goto(f'https://reddit.com{comment["comment_url"]}', timeout=0)
+                page.goto(
+                    f'https://reddit.com{comment["comment_url"]}', timeout=0)
 
                 # translate code
 

@@ -49,7 +49,8 @@ def draw_multiple_line_text(
                     font=font,
                     fill=shadowcolor,
                 )
-        draw.text(((image_width - line_width) / 2, y), line, font=font, fill=text_color)
+        draw.text(((image_width - line_width) / 2, y),
+                  line, font=font, fill=text_color)
         y += line_height + padding
 
 
@@ -64,13 +65,16 @@ def imagemaker(theme, reddit_obj: dict, txtclr, padding=5, transparent=False) ->
     id = re.sub(r"[^\w\s-]", "", reddit_obj["thread_id"])
 
     if transparent:
-        font = ImageFont.truetype(os.path.join("fonts", "Roboto-Bold.ttf"), 50)
-        tfont = ImageFont.truetype(os.path.join("fonts", "Roboto-Bold.ttf"), 50)
+        font = ImageFont.truetype(os.path.join(
+            "fonts", "Roboto-Bold.ttf"), 100)
+        tfont = ImageFont.truetype(
+            os.path.join("fonts", "Roboto-Bold.ttf"), 100)
     else:
         tfont = ImageFont.truetype(
-            os.path.join("fonts", "Roboto-Bold.ttf"), 35
+            os.path.join("fonts", "Roboto-Bold.ttf"), 100
         )  # for title
-        font = ImageFont.truetype(os.path.join("fonts", "Roboto-Regular.ttf"), 30)
+        font = ImageFont.truetype(os.path.join(
+            "fonts", "Roboto-Regular.ttf"), 100)
     size = (1920, 1080)
 
     image = Image.new("RGBA", size, theme)

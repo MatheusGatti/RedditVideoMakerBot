@@ -75,7 +75,8 @@ def download_background(background_config: Tuple[str, str, str, Any]):
     YouTube(uri, on_progress_callback=on_progress).streams.filter(
         res="1080p"
     ).first().download("assets/backgrounds", filename=f"{credit}-{filename}")
-    print_substep("Background video downloaded successfully! 🎉", style="bold green")
+    print_substep("Background video downloaded successfully! 🎉",
+                  style="bold green")
 
 
 def chop_background_video(
@@ -93,7 +94,13 @@ def chop_background_video(
     id = re.sub(r"[^\w\s-]", "", reddit_object["thread_id"])
     background = VideoFileClip(f"assets/backgrounds/{choice}")
 
-    start_time, end_time = get_start_and_end_times(video_length, background.duration)
+    start_time, end_time = get_start_and_end_times(
+        video_length, background.duration)
+
+    # if settings.config["settings"]["storymode"] and settings.config["settings"]["storymodemethod"] == 2:
+    #     end_time += 15
+    #     print(end_time)
+
     try:
         ffmpeg_extract_subclip(
             f"assets/backgrounds/{choice}",

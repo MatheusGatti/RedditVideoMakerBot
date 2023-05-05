@@ -43,8 +43,11 @@ print_markdown(
 checkversion(__VERSION__)
 
 
+# Função principal para executar a criação do vídeo
+# Cada linha representa uma ação da etapa de criação do vídeo
 def main(POST_ID=None) -> None:
     global redditid, reddit_object
+    # Procura o ID da thread do reddit para criar o video
     reddit_object = get_subreddit_threads(POST_ID)
     redditid = id(reddit_object)
     length, number_of_comments = save_text_to_mp3(reddit_object)
@@ -81,7 +84,7 @@ def shutdown():
 if __name__ == "__main__":
     if sys.version_info.major != 3 or sys.version_info.minor != 10:
         print("Hey! Congratulations, you've made it so far (which is pretty rare with no Python 3.10). Unfortunately, this program only works on Python 3.10. Please install Python 3.10 and try again.")
-    ffmpeg_install() # install ffmpeg if not installed
+    ffmpeg_install()  # install ffmpeg if not installed
     directory = Path().absolute()
     config = settings.check_toml(
         f"{directory}/utils/.config.template.toml", "config.toml"
