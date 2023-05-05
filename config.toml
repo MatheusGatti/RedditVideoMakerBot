@@ -1,0 +1,49 @@
+[ai]
+ai_similarity_enabled = false
+ai_similarity_keywords = ""
+
+[settings]
+allow_nsfw = true
+theme = "transparent"
+times_to_run = 1
+opacity = 0.8
+transition = 0.2
+storymode = true
+storymodemethod = 2
+storymode_max_length = 1500
+resolution_w = 1080
+resolution_h = 1920
+
+[settings.background]
+background_choice = "minecraft"
+background_thumbnail = false
+background_thumbnail_font_family = "arial"
+background_thumbnail_font_size = 96
+background_thumbnail_font_color = "255,255,255"
+
+[settings.tts]
+voice_choice = "tiktok"
+aws_polly_voice = "Matthew"
+streamlabs_polly_voice = "Matthew"
+tiktok_voice = "br_005"
+tiktok_sessionid = ""
+python_voice = "1"
+py_voice_num = "2"
+silence_duration = 0.3
+no_emojis = false
+
+[reddit.creds]
+client_id = ""
+client_secret = ""
+username = ""
+password = ""
+2fa = false
+
+[reddit.thread]
+random = true
+subreddit = "desabafos+PergunteReddit+relacionamentos+conversas+ConselhosLegais+EuSouOBabaca"
+post_id = ""
+max_comment_length = 1000
+min_comment_length = 1
+post_lang = "pt"
+min_comments = 20
